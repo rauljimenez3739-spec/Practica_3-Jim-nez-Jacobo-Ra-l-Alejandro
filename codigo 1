@@ -1,0 +1,55 @@
+function practica3_ode45()
+    % Parámetros del sistema
+    m1 = 290;       % kg
+    b1 = 1000;      % Ns/m
+    m2 = 59;        % kg
+    k1 = 16182;     % N/m
+    k2 = 19000;     % N/m
+    f = 0;          % N
+    
+    % Condiciones iniciales
+    x0 = [0; 0; 0; 0]; % [x1; x2; x1_dot; x2_dot]
+    
+    % Tiempo de simulación
+    tspan = [0 10]; % 10 segundos
+    
+    % Simulación para z1(t)
+    [t1, x1] = ode45(@(t,x) suspension_ode(t, x, m1, m2, b1, k1, k2, f, 1), tspan, x0);
+    
+    % Simulación para z2(t) 
+    [t2, x2] = ode45(@(t,x) suspension_ode(t, x, m1, m2, b1, k1, k2, f, 2), tspan, x0);
+    
+    % Graficar resultados
+    figure(1)
+    subplot(2,1,1)
+    plot(t1, x1(:,1), 'b', t1, x1(:,2), 'r')
+    title('Respuesta para z1(t) = 0.05sin(0.5πt)')
+    legend('x1 (carrocería)', 'x2 (rueda)')
+    ylabel('Desplazamiento (m)')
+    
+    subplot(2,1,2)
+    plot(t2, x2(:,1), 'b', t2, x2(:,2), 'r')
+    title('Respuesta para z2(t) = 0.05sin(20πt)')
+    legend('x1 (carrocería)', 'x2 (rueda)')
+    xlabel('Tiempo (s)')
+    ylabel('Desplazamiento (m)')
+end
+
+function dx = suspension_ode(t, x, m1, m2, b1, k1, k2, f, case_num)
+    % Definir la entrada z(t)
+    if case_num == 1
+        z = 0.05*sin(0.5*pi*t);    % z1(t)
+    else
+        z = 0.05*sin(20*pi*t);     % z2(t)
+    end
+    
+    % Variables de estado
+    x1 = x(1); x2 = x(2); x1_dot = x(3); x2_dot = x(4);
+    
+    % Ecuaciones de estado
+    dx = zeros(4,1);
+    dx(1) = x1_dot;
+    dx(2) = x2_dot;
+    dx(3) = (f - b1*(x1_dot - x2_dot) - k1*(x1 - x2)) / m1;
+    dx(4) = (-f + k2*z + b1*(x1_dot - x2_dot) + k1*(x1 - x2) - k2*x2) / m2;
+end
